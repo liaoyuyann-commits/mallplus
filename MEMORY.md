@@ -3,16 +3,11 @@
 > 仓库级记忆（随 git 走）。AI 每次会话开始时先读本文件，结束前更新本文件。与 AGENTS.md 的"当前阶段与任务"同步。
 
 ## 当前任务
-- MVP 代码开发（缓存治理 + 购物车合并与基础路由已完成）
+- MVP 开发 + 运行联调验证全部完成，已提交并推送 `feature/cart`（commit 43831e7）
 
-## 下一步（按顺序）
-1. git init / 确认仓库，建分支 `feature/cache` + `feature/cart`
-2. mall-common 新增：`LocalCacheManager`、`BloomFilterService`、`CacheLockUtil`、`ExpireTimeUtil`、`CacheKeyConstant`、`RocketMqConstant`、`RocketMqConfig`
-3. pom.xml：mall-common 加 caffeine + guava；mall-portal/admin 加 rocketmq-spring-boot-starter（版本安装时验证）
-4. 缓存治理（PmsPortalProductServiceImpl.detail / HomeServiceImpl）
-5. 购物车（CartCookieService / CartRedisService / OmsCartItemServiceImpl / merge 接口）
-6. RocketMQ 链路（admin Producer / portal Receiver / CartMergeConsumer / 幂等）
-7. 静态审查 + git 提交
+## 下一步（可选，非阻塞）
+- 若需「促销结算走 Redis」：将 listPromotion 从 MySQL 完整实体查询切到 Redis（当前促销结算仍查 MySQL）
+- updateAttr（改规格）目前仍走 MySQL cartId，Redis 模式下待接入（已记录为已知待办）
 
 ## 已完成
 - Part 1 研究 Prompt 生成（research-mall-swarm.md 未实际执行，对话中已收集全部信息）
@@ -30,6 +25,13 @@
 - 已完成 RocketMQ 购物车合并生产者/消费者；消费者复用 mergeRequestId 幂等逻辑
 - 已初始化 Git，并创建 `feature/cache`、`feature/cart` 分支；当前分支为 `feature/cart`
 - 已完成 admin 商品更新 -> RocketMQ -> portal 清理 Caffeine/Redis 商品与首页缓存
+- Redis Hash 已保存完整商品展示字段（新增 CartRedisItem DTO，与 Cookie 的 CartMergeItem 分离）
+- updateQuantity/delete 已改走 Redis Hash field（productId:skuId），MySQL 回退兼容；RedisService.hDel 返回值改为 Long
+- 修复 BaseRedisConfig 与各服务 RedisConfig 的 redisTemplate bean 冲突（BaseRedisConfig 去 @Configuration）
+- RocketMQ 全量走 rocketmq-spring-boot-starter：删除 RocketMqConfig 手动 DefaultMQProducer，生产端改 RocketMQTemplate
+- 运行联调全链路验证通过：缓存命中 7.8ms、PRODUCT_EVICT 清缓存、CART_MERGE 合并、购物车增删改查
+- 本地环境：Docker 拉起 Nacos+Redis+RocketMQ（docker-compose-mallplus-env.yml）；MySQL 8.0 加 allowPublicKeyRetrieval；RabbitMQ 建 mall 用户 + /mall vhost
+- git 初始提交并推送 feature/cart（远程 liaoyuyann-commits/mallplus）
 
 ## 关键决策记录
 - 购物车现状是 **MySQL**（oms_cart_item 表），改造为 Cookie + Redis Hash（Redis 为主，MySQL 落库为延伸点不实现）
@@ -39,10 +41,9 @@
 - 随机过期：base + 10% 抖动
 
 ## 阻塞项（Blockers）
-- 购物车 `updateQuantity`、`delete` 仍使用 MySQL cartId 兼容路径；Redis 最小条目尚未保存完整 cartId/展示字段
-- 尚未执行 git commit/push、Redis/RocketMQ 运行时联调
-- C 盘仅 50G → 第 1 周跑通环境：云服务器 2C4G（推荐）或本地精简跑（Nacos+MySQL+Redis+RocketMQ 先行，RabbitMQ/ES/Mongo 后装）
-- rocketmq-spring-boot-starter 与 Spring Boot 3 的兼容版本待安装时验证（TBD）
+- 已全部解除：updateQuantity/delete 已走 Redis field、Redis Hash 已存完整展示字段、git 已提交推送、Redis/RocketMQ 运行时联调已验证
+- rocketmq-spring-boot-starter 2.3.4 已确认与 Spring Boot 3.5 兼容（需配置 rocketmq.name-server + rocketmq.producer.group）
+- 遗留待办（非阻塞）：updateAttr 仍走 MySQL cartId；listPromotion 促销结算仍查 MySQL 完整实体
 
 ## 待定事项（Open Questions）
 - Caffeine 本地缓存过期参数与 Redis 协调值（写代码时定）
