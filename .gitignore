@@ -1,0 +1,17 @@
+# Maven #
+target/
+
+# IDEA #
+.idea/
+*.iml
+
+# Eclipse #
+.settings/
+.classpath
+.project
+
+# Logs #
+*.log
+
+# 本机私有配置（含绝对路径/权限，不上传）#
+.claude/settings.local.json

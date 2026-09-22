@@ -1,0 +1,15 @@
+---
+description: MallPlus workspace guidance for Cursor
+alwaysApply: true
+---
+
+# MallPlus Project Rules
+
+- Read `AGENTS.md` before making any changes.
+- Keep `MEMORY.md` aligned with the current phase and blockers.
+- Follow the project brief and tech design in `agent_docs/`.
+- Preserve Spring Boot 3 / Spring Cloud Alibaba and the original RabbitMQ order-delay flow.
+- Keep business logic in service/impl layers.
+- Centralize cache keys and RocketMQ topic/tag constants.
+- Prefer one bounded feature at a time and verify after it.
+- Do not add tables, delete files, or add out-of-scope features without approval.

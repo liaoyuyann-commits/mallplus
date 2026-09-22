@@ -1,0 +1,18 @@
+{
+  "projectName": "MallPlus",
+  "defaultMode": "plan-first",
+  "readFirst": [
+    "AGENTS.md",
+    "MEMORY.md",
+    "agent_docs/project_brief.md",
+    "agent_docs/tech_stack.md",
+    "agent_docs/testing.md"
+  ],
+  "constraints": [
+    "Do not change the base framework versions.",
+    "Do not modify the original RabbitMQ delay message flow.",
+    "Do not add tables or database schemas without explicit approval.",
+    "Keep business logic in service/impl layers.",
+    "Do not skip verification after a change."
+  ]
+}

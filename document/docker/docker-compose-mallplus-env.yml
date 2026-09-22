@@ -1,0 +1,47 @@
+# MallPlus 联调中间件（仅新增依赖；MySQL/RabbitMQ 已在宿主机原生运行，不在此文件内）
+# 用法：docker compose -f docker-compose-mallplus-env.yml up -d
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: mallplus-redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  nacos:
+    image: nacos/nacos-server:v2.3.2
+    container_name: mallplus-nacos
+    environment:
+      - MODE=standalone
+      # 内存受限环境下收紧 JVM 堆，避免挤占宿主机资源
+      - JVM_XMS=256m
+      - JVM_XMX=256m
+      - JVM_XMN=128m
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    restart: unless-stopped
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.2
+    container_name: mallplus-rmq-namesrv
+    command: sh mqnamesrv
+    ports:
+      - "9876:9876"
+    restart: unless-stopped
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.2
+    container_name: mallplus-rmq-broker
+    depends_on:
+      - rocketmq-namesrv
+    environment:
+      - NAMESRV_ADDR=rocketmq-namesrv:9876
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/conf/broker.conf
+    volumes:
+      - ./rocketmq/broker.conf:/home/rocketmq/conf/broker.conf:ro
+    ports:
+      - "10909:10909"
+      - "10911:10911"
+    restart: unless-stopped
